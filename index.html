@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FBDL — Facebook Video Downloader</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #040b14;
+      --surface:   #080f1c;
+      --panel:     #0a1525;
+      --border:    #0d2540;
+      --glow:      #00d4ff;
+      --glow2:     #0088ff;
+      --accent:    #ff6b00;
+      --success:   #00ff88;
+      --text:      #c8e0f4;
+      --muted:     #3a5a7a;
+      --danger:    #ff3355;
+      --fb:        #1877f2;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated grid background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      animation: gridScroll 20s linear infinite;
+      pointer-events: none; z-index: 0;
+    }
+
+    @keyframes gridScroll {
+      from { background-position: 0 0, 0 0; }
+      to   { background-position: 40px 40px, 40px 40px; }
+    }
+
+    /* ── Radial glow orb ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none; z-index: 0;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      top: -200px; left: -200px;
+      background: radial-gradient(circle, rgba(0,136,255,.12), transparent 70%);
+      animation: orbFloat1 12s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 500px; height: 500px;
+      bottom: -200px; right: -100px;
+      background: radial-gradient(circle, rgba(0,212,255,.08), transparent 70%);
+      animation: orbFloat2 15s ease-in-out infinite;
+    }
+
+    @keyframes orbFloat1 {
+      0%,100% { transform: translate(0,0); }
+      50%      { transform: translate(80px, 60px); }
+    }
+    @keyframes orbFloat2 {
+      0%,100% { transform: translate(0,0); }
+      50%      { transform: translate(-60px,-40px); }
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 60px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--glow2), var(--glow));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 18px; font-weight: 900;
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(0,212,255,.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.2));
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 20px; font-weight: 700;
+      letter-spacing: 3px;
+      color: #fff;
+    }
+
+    .logo-text span { color: var(--glow); }
+
+    .badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid var(--muted);
+      border-radius: 2px;
+      color: var(--muted);
+      letter-spacing: 2px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 3px;
+      color: var(--glow);
+      border: 1px solid rgba(0,212,255,.2);
+      background: rgba(0,212,255,.04);
+      padding: 6px 16px; border-radius: 2px;
+      margin-bottom: 24px;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--glow);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(0,212,255,.4); }
+      50%      { opacity:.6; box-shadow: 0 0 0 6px transparent; }
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(28px, 5vw, 48px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(90deg, var(--glow2), var(--glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 15px;
+      color: var(--muted);
+      letter-spacing: .5px;
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── Main card ── */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--glow2), var(--glow), transparent);
+    }
+
+    .card-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 3px;
+      color: var(--glow);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .card-label::after {
+      content: '';
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ── URL input area ── */
+    .input-group {
+      display: flex; gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--surface);
+      transition: border-color .2s;
+      position: relative;
+    }
+
+    .input-group:focus-within {
+      border-color: var(--glow2);
+      box-shadow: 0 0 0 3px rgba(0,136,255,.1), 0 0 20px rgba(0,212,255,.06);
+    }
+
+    .input-prefix {
+      display: flex; align-items: center;
+      padding: 0 16px;
+      background: rgba(0,212,255,.04);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .input-prefix svg { color: var(--glow); }
+
+    .url-input {
+      flex: 1;
+      background: transparent;
+      border: none; outline: none;
+      padding: 16px 18px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px; letter-spacing: .5px;
+      color: var(--text);
+      width: 100%;
+    }
+
+    .url-input::placeholder { color: var(--muted); }
+
+    .paste-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 0 18px;
+      background: rgba(0,212,255,.06);
+      border: none; border-left: 1px solid var(--border);
+      color: var(--glow);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px; font-weight: 600; letter-spacing: 1px;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .paste-btn:hover {
+      background: rgba(0,212,255,.14);
+      color: #fff;
+    }
+
+    /* ── Fetch button ── */
+    .btn-fetch {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--glow2), var(--glow));
+      border: none; border-radius: 6px;
+      color: var(--bg);
+      font-family: 'Orbitron', monospace;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 3px;
+      cursor: pointer;
+      position: relative; overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .btn-fetch:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(0,212,255,.3);
+    }
+
+    .btn-fetch:active { transform: translateY(1px); }
+
+    .btn-fetch::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.15));
+      pointer-events: none;
+    }
+
+    .btn-fetch:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-inner {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .progress-wrap.active { display: block; }
+
+    .progress-header {
+      display: flex; justify-content: space-between;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--glow2), var(--glow));
+      border-radius: 2px;
+      width: 0%;
+      transition: width .3s ease;
+      box-shadow: 0 0 8px var(--glow);
+    }
+
+    .progress-steps {
+      display: flex; gap: 6px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 2px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: all .3s;
+    }
+
+    .step.active {
+      border-color: var(--glow);
+      color: var(--glow);
+      background: rgba(0,212,255,.08);
+      box-shadow: 0 0 10px rgba(0,212,255,.1);
+    }
+
+    .step.done {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(0,255,136,.06);
+    }
+
+    /* ── Results panel ── */
+    .results-panel {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .results-panel.active { display: block; }
+
+    .video-preview {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--surface);
+      margin-bottom: 20px;
+    }
+
+    .preview-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .preview-thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-thumb .play-icon {
+      position: absolute;
+      width: 60px; height: 60px;
+      background: rgba(0,212,255,.15);
+      border: 2px solid var(--glow);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+    }
+
+    .preview-thumb .placeholder-graphic {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; width: 100%; height: 200px;
+      background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0,212,255,.02) 10px,
+        rgba(0,212,255,.02) 20px
+      );
+    }
+
+    .placeholder-graphic .fb-logo {
+      width: 48px; height: 48px;
+      background: var(--fb);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px; font-weight: 900;
+      color: #fff;
+      box-shadow: 0 0 30px rgba(24,119,242,.3);
+    }
+
+    .video-meta {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .video-title {
+      font-size: 14px; font-weight: 600;
+      color: #fff; margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .video-stats {
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+
+    .stat {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; color: var(--muted);
+      display: flex; align-items: center; gap: 5px;
+    }
+
+    .stat-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--glow);
+    }
+
+    /* ── Quality options ── */
+    .quality-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .quality-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: all .2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quality-card:hover {
+      border-color: var(--glow2);
+      background: rgba(0,136,255,.05);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,136,255,.1);
+    }
+
+    .quality-card.hd::before {
+      content: 'BEST';
+      position: absolute; top: 8px; right: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 8px; letter-spacing: 2px;
+      padding: 2px 6px;
+      background: rgba(0,212,255,.1);
+      border: 1px solid var(--glow);
+      border-radius: 2px;
+      color: var(--glow);
+    }
+
+    .quality-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 18px; font-weight: 700;
+      color: #fff; margin-bottom: 4px;
+    }
+
+    .quality-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .quality-size {
+      font-size: 12px; color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .btn-dl {
+      width: 100%;
+      padding: 10px;
+      background: rgba(0,212,255,.08);
+      border: 1px solid rgba(0,212,255,.2);
+      border-radius: 4px;
+      color: var(--glow);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    .btn-dl:hover {
+      background: rgba(0,212,255,.16);
+      border-color: var(--glow);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0,212,255,.2);
+    }
+
+    /* Audio only option */
+    .audio-option {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      background: var(--surface);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .audio-info {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .audio-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,107,0,.1);
+      border: 1px solid rgba(255,107,0,.2);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+    }
+
+    .audio-label { font-size: 14px; font-weight: 600; color: #fff; }
+    .audio-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px; color: var(--muted); letter-spacing: 1px;
+    }
+
+    .btn-audio {
+      padding: 10px 20px;
+      background: rgba(255,107,0,.08);
+      border: 1px solid rgba(255,107,0,.25);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      cursor: pointer;
+      transition: all .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .btn-audio:hover {
+      background: rgba(255,107,0,.16);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(255,107,0,.15);
+    }
+
+    /* ── Error state ── */
+    .error-box {
+      display: none;
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: rgba(255,51,85,.06);
+      border: 1px solid rgba(255,51,85,.2);
+      border-radius: 6px;
+      color: var(--danger);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px; letter-spacing: 1px;
+      display: none; align-items: center; gap: 10px;
+    }
+
+    .error-box.active { display: flex; }
+
+    /* ── Features strip ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .feat {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+
+    .feat-icon {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: rgba(0,212,255,.08);
+      border: 1px solid rgba(0,212,255,.15);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--glow);
+    }
+
+    .feat-title {
+      font-size: 13px; font-weight: 700;
+      color: #fff; margin-bottom: 4px;
+    }
+
+    .feat-desc {
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    footer p {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; color: var(--muted); letter-spacing: 1px;
+      line-height: 1.8;
+    }
+
+    footer strong { color: var(--glow); font-weight: 400; }
+
+    /* ── Scanline overlay ── */
+    .scanlines {
+      position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.03) 2px,
+        rgba(0,0,0,.03) 4px
+      );
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(4,11,20,.4);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      display: none;
+    }
+
+    .spinner.active { display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Corner decorations ── */
+    .corner-tl, .corner-br {
+      position: absolute;
+      width: 14px; height: 14px;
+      pointer-events: none;
+    }
+
+    .corner-tl {
+      top: 8px; left: 8px;
+      border-top: 1px solid var(--glow2);
+      border-left: 1px solid var(--glow2);
+    }
+
+    .corner-br {
+      bottom: 8px; right: 8px;
+      border-bottom: 1px solid var(--glow2);
+      border-right: 1px solid var(--glow2);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .wrapper { padding: 24px 16px 60px; }
+      header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .input-group { flex-wrap: wrap; }
+      .paste-btn { border-top: 1px solid var(--border); border-left: none; width: 100%; justify-content: center; padding: 12px; }
+      .quality-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Entry animations ── */
+    .animate-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp .6s ease forwards;
+    }
+
+    .animate-in:nth-child(1) { animation-delay: .05s; }
+    .animate-in:nth-child(2) { animation-delay: .15s; }
+    .animate-in:nth-child(3) { animation-delay: .25s; }
+    .animate-in:nth-child(4) { animation-delay: .35s; }
+
+    @keyframes fadeUp {
+      to { opacity:1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <header class="animate-in">
+    <div class="logo">
+      <div class="logo-icon">FB</div>
+      <div class="logo-text">FB<span>DL</span></div>
+    </div>
+    <div class="badge">v3.1.0 STABLE</div>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero animate-in">
+    <div class="hero-tag">FACEBOOK VIDEO DOWNLOADER</div>
+    <h1>Download Any <span>FB Video</span><br/>In Seconds</h1>
+    <p>Paste a Facebook video URL and extract HD, SD, or audio-only formats — fast, free, and with no limits.</p>
+  </div>
+
+  <!-- Main card -->
+  <div class="card animate-in" id="mainCard">
+    <div class="corner-tl"></div>
+    <div class="corner-br"></div>
+    <div class="card-label">// INPUT TARGET URL</div>
+
+    <div class="input-group">
+      <div class="input-prefix">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+        </svg>
+      </div>
+      <input
+        class="url-input"
+        id="urlInput"
+        type="url"
+        placeholder="https://www.facebook.com/watch?v=..."
+        autocomplete="off" spellcheck="false"
+      />
+      <button class="paste-btn" id="pasteBtn" onclick="pasteURL()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+        </svg>
+        PASTE
+      </button>
+    </div>
+
+    <button class="btn-fetch" id="fetchBtn" onclick="fetchVideo()">
+      <div class="btn-inner">
+        <div class="spinner" id="spinner"></div>
+        <svg id="fetchIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        ANALYZE &amp; FETCH
+      </div>
+    </button>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-header">
+        <span id="progressLabel">INITIALIZING...</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-steps">
+        <div class="step" id="s1">VALIDATING URL</div>
+        <div class="step" id="s2">CONNECTING</div>
+        <div class="step" id="s3">FETCHING METADATA</div>
+        <div class="step" id="s4">EXTRACTING STREAMS</div>
+        <div class="step" id="s5">READY</div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="error-box" id="errorBox">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="errorMsg">Invalid URL. Please provide a valid Facebook video link.</span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-panel" id="resultsPanel">
+    <div class="card">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+      <div class="card-label">// VIDEO DETECTED</div>
+
+      <div class="video-preview" id="videoPreview">
+        <div class="preview-thumb">
+          <div class="placeholder-graphic" id="thumbPlaceholder">
+            <div class="fb-logo">f</div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;">FACEBOOK VIDEO</div>
+          </div>
+          <img id="thumbImg" style="display:none;" alt="Video thumbnail" />
+          <div class="play-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--glow);margin-left:3px;">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+          </div>
+        </div>
+        <div class="video-meta">
+          <div class="video-title" id="videoTitle">Loading video information...</div>
+          <div class="video-stats">
+            <div class="stat"><div class="stat-dot"></div><span id="videoDuration">--:--</span></div>
+            <div class="stat"><div class="stat-dot" style="background:var(--accent)"></div><span id="videoResolution">—</span></div>
+            <div class="stat"><div class="stat-dot" style="background:var(--success)"></div><span id="videoSize">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-label">// SELECT DOWNLOAD FORMAT</div>
+      <div class="quality-grid" id="qualityGrid">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="audio-option">
+        <div class="audio-info">
+          <div class="audio-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="audio-label">Audio Only</div>
+            <div class="audio-sub">MP3 · 128KBPS · EXTRACT AUDIO TRACK</div>
+          </div>
+        </div>
+        <button class="btn-audio" onclick="downloadAudio()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M5 20h14"/>
+          </svg>
+          DOWNLOAD MP3
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features animate-in">
+    <div class="feat">
+      <div class="feat-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="feat-title">Lightning Fast</div>
+        <div class="feat-desc">Direct stream extraction with no intermediate servers. Maximum speed.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="feat-title">HD Quality</div>
+        <div class="feat-desc">Download in 1080p, 720p, 480p, 360p or audio-only MP3.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="feat-title">No Registration</div>
+        <div class="feat-desc">Completely free. No login, no tracking, no watermarks.</div>
+      </div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/>
+        </svg>
+      </div>
+      <div>
+        <div class="feat-title">Universal Support</div>
+        <div class="feat-desc">Posts, Reels, Watch, Stories, Groups — all URL formats supported.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      <strong>FBDL</strong> — For personal use only.<br/>
+      Respect copyright law and Facebook's Terms of Service.<br/>
+      Only download videos you have permission to save.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+  /* ──────────────────────────────────────────────
+     Utility helpers
+  ────────────────────────────────────────────── */
+  const $ = id => document.getElementById(id);
+
+  function isValidFBUrl(url) {
+    try {
+      const u = new URL(url.trim());
+      return /facebook\.com|fb\.watch|fb\.com/i.test(u.hostname);
+    } catch { return false; }
+  }
+
+  function formatBytes(mb) {
+    if (mb < 1) return `${Math.round(mb * 1000)} KB`;
+    return `${mb.toFixed(1)} MB`;
+  }
+
+  function showError(msg) {
+    const box = $('errorBox');
+    $('errorMsg').textContent = msg;
+    box.style.display = 'flex';
+    box.classList.add('active');
+  }
+
+  function hideError() {
+    $('errorBox').style.display = 'none';
+    $('errorBox').classList.remove('active');
+  }
+
+  /* ──────────────────────────────────────────────
+     Paste from clipboard
+  ────────────────────────────────────────────── */
+  async function pasteURL() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        $('urlInput').value = text.trim();
+        $('urlInput').focus();
+      }
+    } catch {
+      $('urlInput').focus();
+      document.execCommand('paste');
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+     Animated progress sequence
+  ────────────────────────────────────────────── */
+  const STEPS = [
+    { id: 's1', label: 'VALIDATING URL',      pct: 10 },
+    { id: 's2', label: 'CONNECTING TO SERVER', pct: 28 },
+    { id: 's3', label: 'FETCHING METADATA',   pct: 52 },
+    { id: 's4', label: 'EXTRACTING STREAMS',  pct: 80 },
+    { id: 's5', label: 'READY',               pct: 100 },
+  ];
+
+  function setProgress(pct, label) {
+    $('progressFill').style.width = pct + '%';
+    $('progressPct').textContent  = pct + '%';
+    $('progressLabel').textContent = label;
+  }
+
+  function markStep(id, state) {
+    const el = $(id);
+    el.classList.remove('active','done');
+    if (state) el.classList.add(state);
+  }
+
+  async function runProgress() {
+    $('progressWrap').classList.add('active');
+    for (let i = 0; i < STEPS.length; i++) {
+      const s = STEPS[i];
+      markStep(s.id, 'active');
+      setProgress(s.pct, s.label);
+      // variable delay to feel real
+      await new Promise(r => setTimeout(r, 380 + Math.random() * 340));
+      markStep(s.id, 'done');
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+     Mock video data generator
+     In production, replace with your real API call.
+  ────────────────────────────────────────────── */
+  function generateVideoData(url) {
+    const titles = [
+      "Amazing Nature Documentary — Wildlife in Motion",
+      "Viral Compilation: Best Moments of 2024",
+      "Live Concert Highlights — Summer Festival",
+      "How to Cook the Perfect Pasta — Step by Step",
+      "Breaking News Coverage — Full Stream",
+    ];
+    const title = titles[Math.floor(Math.random() * titles.length)];
+    const duration = `${Math.floor(Math.random()*20+1)}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`;
+
+    return {
+      title,
+      duration,
+      qualities: [
+        { label:'1080p', desc:'FULL HD',     size: (85 + Math.random()*60).toFixed(1),  mime:'MP4' },
+        { label:'720p',  desc:'HD READY',    size: (45 + Math.random()*30).toFixed(1),  mime:'MP4' },
+        { label:'480p',  desc:'STANDARD',    size: (22 + Math.random()*15).toFixed(1),  mime:'MP4' },
+        { label:'360p',  desc:'LOW DATA',    size: (10 + Math.random()*8).toFixed(1),   mime:'MP4' },
+      ]
+    };
+  }
+
+  /* ──────────────────────────────────────────────
+     Render quality cards
+  ────────────────────────────────────────────── */
+  function renderQualities(qualities) {
+    const grid = $('qualityGrid');
+    grid.innerHTML = '';
+    qualities.forEach((q, i) => {
+      const card = document.createElement('div');
+      card.className = 'quality-card' + (i === 0 ? ' hd' : '');
+      card.innerHTML = `
+        <div class="quality-label">${q.label}</div>
+        <div class="quality-desc">${q.mime} · ${q.desc}</div>
+        <div class="quality-size">≈ ${q.size} MB</div>
+        <button class="btn-dl" onclick="downloadVideo('${q.label}', '${q.mime}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="7,10 12,15 17,10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M5 20h14"/>
+          </svg>
+          DOWNLOAD
+        </button>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  /* ──────────────────────────────────────────────
+     Download triggers
+  ────────────────────────────────────────────── */
+  function downloadVideo(quality, format) {
+    showToast(`⬇ Downloading ${quality} ${format}...`);
+    /*
+      PRODUCTION:
+      window.open(`/api/download?url=${encodeURIComponent(currentURL)}&quality=${quality}`, '_blank');
+    */
+  }
+
+  function downloadAudio() {
+    showToast('⬇ Preparing MP3 download...');
+  }
+
+  /* ──────────────────────────────────────────────
+     Toast notification
+  ────────────────────────────────────────────── */
+  function showToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'toast';
+      Object.assign(t.style, {
+        position: 'fixed', bottom: '30px', left: '50%',
+        transform: 'translateX(-50%) translateY(20px)',
+        background: 'var(--panel)', border: '1px solid var(--glow2)',
+        color: 'var(--glow)', fontFamily: "'Share Tech Mono',monospace",
+        fontSize: '12px', letterSpacing: '1px',
+        padding: '12px 24px', borderRadius: '4px',
+        boxShadow: '0 0 30px rgba(0,212,255,.15)',
+        opacity: '0', transition: 'all .3s',
+        zIndex: '9999', whiteSpace: 'nowrap',
+      });
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    requestAnimationFrame(() => {
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(10px)';
+    }, 3000);
+  }
+
+  /* ──────────────────────────────────────────────
+     Main fetch flow
+  ────────────────────────────────────────────── */
+  let busy = false;
+  let currentURL = '';
+
+  async function fetchVideo() {
+    if (busy) return;
+
+    const url = $('urlInput').value.trim();
+    hideError();
+
+    if (!url) { showError('Please enter a Facebook video URL.'); return; }
+    if (!isValidFBUrl(url)) {
+      showError('Invalid URL. Please enter a valid Facebook or fb.watch link.');
+      return;
+    }
+
+    currentURL = url;
+    busy = true;
+
+    // UI: loading state
+    const btn = $('fetchBtn');
+    const icon = $('fetchIcon');
+    const spin = $('spinner');
+    btn.disabled = true;
+    icon.style.display = 'none';
+    spin.classList.add('active');
+
+    // hide old results
+    $('resultsPanel').classList.remove('active');
+    $('resultsPanel').style.display = 'none';
+
+    await runProgress();
+
+    // Simulate API call — replace with real fetch:
+    // const res = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+    // const data = await res.json();
+    await new Promise(r => setTimeout(r, 400));
+    const data = generateVideoData(url);
+
+    // Populate results
+    $('videoTitle').textContent = data.title;
+    $('videoDuration').textContent = data.duration;
+    $('videoResolution').textContent = data.qualities[0].label + ' MAX';
+    $('videoSize').textContent = `~${data.qualities[0].size} MB`;
+    renderQualities(data.qualities);
+
+    // Show results
+    $('resultsPanel').style.display = 'block';
+    $('resultsPanel').classList.add('active');
+    $('resultsPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Reset button
+    btn.disabled = false;
+    icon.style.display = '';
+    spin.classList.remove('active');
+    busy = false;
+  }
+
+  /* ──────────────────────────────────────────────
+     Enter key support
+  ────────────────────────────────────────────── */
+  $('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchVideo();
+  });
+
+  /* ──────────────────────────────────────────────
+     URL input auto-clear on focus if it looks done
+  ────────────────────────────────────────────── */
+  $('urlInput').addEventListener('focus', function() {
+    this.select();
+  });
+</script>
+</body>
+</html>
