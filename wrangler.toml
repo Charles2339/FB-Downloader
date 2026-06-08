@@ -1,0 +1,8 @@
+name = "fbdl-worker"
+main = "worker.js"
+compatibility_date = "2024-05-01"
+
+# Your worker will be available at:
+# https://fbdl-worker.<your-subdomain>.workers.dev/extract?url=...
+#
+# After deploying, copy that URL into index.html where it says WORKER_URL.
