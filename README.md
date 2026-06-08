@@ -30,6 +30,8 @@ The Worker is separate — you only redeploy it when `worker.js` changes.
 
 ## Prerequisites (one-time setup)
 
+> **On Android phone?** Skip to the [Termux setup](#termux-android-phone-setup) section below first, then come back here.
+
 ### 1. Create a free Cloudflare account
 Go to https://cloudflare.com → Sign Up. No credit card needed.
 
@@ -58,6 +60,85 @@ A browser window opens → click **Allow**.
 
 ---
 
+## Termux (Android phone) setup
+
+Termux is a free Linux terminal app for Android. It lets you run all the same commands as a computer — no PC needed.
+
+### 1. Install Termux
+**Important:** Install from **F-Droid**, not the Play Store. The Play Store version is outdated and broken.
+
+- Install F-Droid: https://f-droid.org
+- Open F-Droid → search **Termux** → install it
+
+### 2. Open Termux and run initial setup
+```
+pkg update && pkg upgrade
+```
+Press `Y` when prompted. This may take a few minutes.
+
+### 3. Install Node.js and Git
+```
+pkg install nodejs git
+```
+Press `Y` when prompted. Verify both installed:
+```
+node --version
+git --version
+```
+
+### 4. Install Wrangler
+```
+npm install -g wrangler
+```
+
+### 5. Give Termux access to your phone storage
+You'll need this to access your project files:
+```
+termux-setup-storage
+```
+Tap **Allow** when Android asks for permission.
+
+Your phone storage is now at `~/storage/shared/` in Termux.
+For example, if your files are in Downloads:
+```
+cd ~/storage/shared/Downloads/fbdl-cloudflare
+```
+
+### 6. Log Wrangler into Cloudflare
+```
+wrangler login
+```
+Termux will print a URL — it should automatically open in Chrome. If it doesn't, long-press the URL and open it manually. Tap **Allow** on the Cloudflare page.
+
+### 7. Configure Git with your GitHub details
+```
+git config --global user.name "Your Name"
+git config --global user.email "your@email.com"
+```
+Use the same email as your GitHub account.
+
+### 8. Set up GitHub authentication
+GitHub no longer accepts passwords over HTTPS — you need a Personal Access Token.
+
+1. Go to https://github.com/settings/tokens
+2. Click **Generate new token (classic)**
+3. Give it a name like `termux`
+4. Check the **repo** scope
+5. Click **Generate token**
+6. Copy the token (you won't see it again)
+
+When Git asks for your password during `git push`, paste this token instead.
+
+To avoid typing it every time:
+```
+git config --global credential.helper store
+```
+Git will save your token after the first successful push.
+
+**You're all set. Continue from Step 1 below — all commands work the same in Termux.**
+
+---
+
 ## Step 1 — Push your files to GitHub
 
 ### Create a new repository
@@ -71,7 +152,7 @@ In your terminal, navigate to your project folder:
 ```
 cd /path/to/fbdl-cloudflare
 ```
-(On Windows: right-click the folder → "Open in Terminal")
+(Termux users: `cd ~/storage/shared/Downloads/fbdl-cloudflare` or wherever you saved the files)
 
 Then run these commands one by one:
 ```
@@ -130,6 +211,12 @@ git add index.html
 git commit -m "Set Worker URL"
 git push
 ```
+
+> **Termux tip:** To edit files in Termux, you can use the `nano` editor:
+> ```
+> nano index.html
+> ```
+> Find the WORKER_URL line, edit it, then press `Ctrl+X` → `Y` → `Enter` to save.
 
 ---
 
@@ -206,6 +293,14 @@ Workers are not auto-deployed from GitHub — always run `wrangler deploy` for W
 **Worker error in browser**
 → Go to Cloudflare Dashboard → Workers & Pages → fbdl-worker → **Logs** for detailed errors.
 
+**Termux: "permission denied" accessing files**
+→ Run `termux-setup-storage` again and tap Allow.
+→ Make sure you're navigating via `~/storage/shared/` not direct paths.
+
+**Termux: wrangler login URL doesn't open**
+→ Long-press the URL in Termux → tap Open in Browser.
+→ Or manually copy and paste it into Chrome.
+
 ---
 
 ## Free tier limits
@@ -228,3 +323,4 @@ More than enough for personal use.
 - [ ] `index.html` updated with correct WORKER_URL and pushed
 - [ ] Cloudflare Pages connected to GitHub repo
 - [ ] Site live and tested
+ 
