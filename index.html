@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FBDL — Facebook Video Downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#030c16;--surf:#071220;--panel:#091524;--bdr:#0c2238;--glow:#00d4ff;--g2:#0077ff;--acc:#ff6a00;--ok:#00ff88;--txt:#bdd8f0;--dim:#2e506e;--red:#ff3355}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:Rajdhani,sans-serif;font-size:16px;min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.022) 1px,transparent 1px);background-size:42px 42px;animation:gs 22s linear infinite;pointer-events:none;z-index:0}
+@keyframes gs{to{background-position:42px 42px,42px 42px}}
+.orb{position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0}
+.o1{width:650px;height:650px;top:-280px;left:-180px;background:radial-gradient(circle,rgba(0,100,255,.09),transparent 70%);animation:of1 15s ease-in-out infinite}
+.o2{width:480px;height:480px;bottom:-180px;right:-80px;background:radial-gradient(circle,rgba(0,212,255,.06),transparent 70%);animation:of2 19s ease-in-out infinite}
+@keyframes of1{0%,100%{transform:translate(0,0)}50%{transform:translate(70px,55px)}}
+@keyframes of2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-35px)}}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px)}
+.w{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:34px 20px 72px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:48px}
+.logo{display:flex;align-items:center;gap:12px}
+.lico{width:38px;height:38px;background:linear-gradient(135deg,var(--g2),var(--glow));border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:15px;font-weight:900;color:var(--bg);box-shadow:0 0 20px rgba(0,212,255,.32);position:relative;overflow:hidden}
+.lico::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.15))}
+.lnm{font-family:Orbitron,monospace;font-size:18px;font-weight:900;letter-spacing:3px;color:#fff}
+.lnm span{color:var(--glow)}
+.ver{font-family:"Share Tech Mono",monospace;font-size:10px;padding:4px 10px;border:1px solid var(--dim);border-radius:2px;color:var(--dim);letter-spacing:2px}
+.hero{text-align:center;margin-bottom:44px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:3px;color:var(--glow);border:1px solid rgba(0,212,255,.18);background:rgba(0,212,255,.04);padding:5px 14px;border-radius:2px;margin-bottom:20px}
+.pill::before{content:"";width:5px;height:5px;background:var(--glow);border-radius:50%;animation:blk 2s ease-in-out infinite}
+@keyframes blk{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-family:Orbitron,monospace;font-size:clamp(24px,5vw,44px);font-weight:900;line-height:1.1;color:#fff;margin-bottom:12px}
+.hero h1 span{background:linear-gradient(90deg,var(--g2),var(--glow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:14px;color:var(--dim);letter-spacing:.4px;max-width:440px;margin:0 auto;line-height:1.7}
+.card{background:var(--panel);border:1px solid var(--bdr);border-radius:11px;padding:26px 26px 22px;position:relative;overflow:hidden;margin-bottom:18px}
+.card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g2),var(--glow),transparent)}
+.clbl{font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:3px;color:var(--glow);margin-bottom:16px;display:flex;align-items:center;gap:7px}
+.clbl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--bdr),transparent)}
+.ig{display:flex;border:1px solid var(--bdr);border-radius:5px;overflow:hidden;background:var(--surf);transition:border-color .2s,box-shadow .2s}
+.ig:focus-within{border-color:var(--g2);box-shadow:0 0 0 3px rgba(0,119,255,.1)}
+.ipfx{display:flex;align-items:center;padding:0 13px;background:rgba(0,212,255,.04);border-right:1px solid var(--bdr);flex-shrink:0;color:var(--glow)}
+input[type=url]{flex:1;background:transparent;border:none;outline:none;padding:13px 14px;font-family:"Share Tech Mono",monospace;font-size:12px;color:var(--txt);width:100%}
+input::placeholder{color:var(--dim)}
+.pbtn{display:flex;align-items:center;gap:5px;padding:0 14px;background:rgba(0,212,255,.05);border:none;border-left:1px solid var(--bdr);color:var(--glow);font-family:Rajdhani,sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:background .2s,color .2s;flex-shrink:0;white-space:nowrap}
+.pbtn:hover{background:rgba(0,212,255,.12);color:#fff}
+.fbtn{width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,var(--g2),var(--glow));border:none;border-radius:5px;color:var(--bg);font-family:Orbitron,monospace;font-size:11px;font-weight:900;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:transform .12s,box-shadow .12s;display:flex;align-items:center;justify-content:center;gap:9px}
+.fbtn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(0,212,255,.26)}
+.fbtn:active:not(:disabled){transform:translateY(1px)}
+.fbtn:disabled{opacity:.5;cursor:not-allowed}
+.fbtn::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(255,255,255,.11));pointer-events:none}
+.spin{width:13px;height:13px;border:2px solid rgba(3,12,22,.3);border-top-color:var(--bg);border-radius:50%;animation:sp .5s linear infinite;display:none}
+.spin.on{display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pw{margin-top:16px;display:none}
+.pw.on{display:block}
+.ph{display:flex;justify-content:space-between;font-family:"Share Tech Mono",monospace;font-size:10px;color:var(--dim);margin-bottom:6px}
+.pb{height:2px;background:var(--bdr);border-radius:2px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--g2),var(--glow));border-radius:2px;width:0%;transition:width .3s ease;box-shadow:0 0 7px var(--glow)}
+.steps{display:flex;gap:5px;margin-top:11px;flex-wrap:wrap}
+.step{font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;border:1px solid var(--bdr);color:var(--dim);transition:all .25s}
+.step.active{border-color:var(--glow);color:var(--glow);background:rgba(0,212,255,.06)}
+.step.done{border-color:var(--ok);color:var(--ok);background:rgba(0,255,136,.04)}
+.err{display:none;margin-top:12px;padding:12px 16px;background:rgba(255,51,85,.05);border:1px solid rgba(255,51,85,.2);border-radius:5px;color:var(--red);font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:.8px;align-items:flex-start;gap:9px;line-height:1.6}
+.err.on{display:flex}
+.res{display:none;animation:fu .35s ease}
+.res.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.vp{border:1px solid var(--bdr);border-radius:7px;overflow:hidden;background:var(--surf);margin-bottom:16px}
+.vt{width:100%;aspect-ratio:16/9;background:var(--bg);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.vt img{width:100%;height:100%;object-fit:cover;display:block}
+.ni{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;width:100%;height:170px;background:repeating-linear-gradient(45deg,transparent,transparent 11px,rgba(0,212,255,.013) 11px,rgba(0,212,255,.013) 22px)}
+.niico{width:42px;height:42px;background:#1877f2;border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:19px;font-weight:900;color:#fff;box-shadow:0 0 24px rgba(24,119,242,.22)}
+.nit{font-family:"Share Tech Mono",monospace;font-size:9px;color:var(--dim);letter-spacing:2px}
+.ply{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.plc{width:52px;height:52px;background:rgba(0,0,0,.42);border:2px solid rgba(0,212,255,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
+.vm{padding:13px 17px;border-top:1px solid var(--bdr)}
+.vtl{font-size:13px;font-weight:600;color:#fff;margin-bottom:7px;line-height:1.5}
+.vst{display:flex;gap:13px;flex-wrap:wrap}
+.vsi{font-family:"Share Tech Mono",monospace;font-size:10px;color:var(--dim);display:flex;align-items:center;gap:4px}
+.vd{width:4px;height:4px;border-radius:50%;background:var(--glow)}
+.qg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.qc{border:1px solid var(--bdr);border-radius:7px;padding:14px;background:var(--surf);transition:all .18s;position:relative;overflow:hidden;cursor:pointer}
+.qc:hover{border-color:var(--g2);background:rgba(0,119,255,.05);transform:translateY(-2px);box-shadow:0 7px 22px rgba(0,119,255,.1)}
+.qc.best::before{content:"BEST";position:absolute;top:7px;right:7px;font-family:"Share Tech Mono",monospace;font-size:8px;letter-spacing:2px;padding:2px 5px;background:rgba(0,212,255,.09);border:1px solid var(--glow);border-radius:2px;color:var(--glow)}
+.ql{font-family:Orbitron,monospace;font-size:16px;font-weight:700;color:#fff;margin-bottom:2px}
+.qd{font-family:"Share Tech Mono",monospace;font-size:9px;letter-spacing:1px;color:var(--dim);margin-bottom:11px}
+.qb{width:100%;padding:8px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.18);border-radius:3px;color:var(--glow);font-family:Rajdhani,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:5px}
+.qc:hover .qb{background:rgba(0,212,255,.13);border-color:var(--glow);color:#fff}
+.ar{border:1px solid var(--bdr);border-radius:7px;padding:13px 16px;background:var(--surf);display:flex;align-items:center;justify-content:space-between;gap:11px;flex-wrap:wrap}
+.ai{display:flex;align-items:center;gap:10px}
+.aic{width:32px;height:32px;background:rgba(255,106,0,.09);border:1px solid rgba(255,106,0,.18);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--acc);flex-shrink:0}
+.al{font-size:13px;font-weight:600;color:#fff}
+.as{font-family:"Share Tech Mono",monospace;font-size:9px;color:var(--dim);letter-spacing:1px}
+.ab{padding:8px 16px;background:rgba(255,106,0,.07);border:1px solid rgba(255,106,0,.2);border-radius:3px;color:var(--acc);font-family:Rajdhani,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;text-decoration:none}
+.ab:hover{background:rgba(255,106,0,.14);border-color:var(--acc);box-shadow:0 0 11px rgba(255,106,0,.13)}
+.feats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:18px}
+.ft{background:var(--panel);border:1px solid var(--bdr);border-radius:7px;padding:15px;display:flex;align-items:flex-start;gap:10px}
+.ftic{width:28px;height:28px;flex-shrink:0;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.11);border-radius:5px;display:flex;align-items:center;justify-content:center;color:var(--glow)}
+.ftt{font-size:12px;font-weight:700;color:#fff;margin-bottom:2px}
+.ftd{font-size:11px;color:var(--dim);line-height:1.5}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--bdr);text-align:center}
+footer p{font-family:"Share Tech Mono",monospace;font-size:10px;color:var(--dim);letter-spacing:1px;line-height:1.85}
+footer strong{color:var(--glow);font-weight:400}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--panel);border:1px solid var(--g2);color:var(--glow);font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:1px;padding:10px 20px;border-radius:3px;box-shadow:0 0 26px rgba(0,212,255,.12);opacity:0;transition:all .28s;z-index:9999;white-space:nowrap;pointer-events:none}
+.ain{opacity:0;transform:translateY(16px);animation:fu .52s ease forwards}
+.ain:nth-child(1){animation-delay:.05s}.ain:nth-child(2){animation-delay:.14s}.ain:nth-child(3){animation-delay:.23s}.ain:nth-child(4){animation-delay:.32s}
+@media(max-width:560px){.w{padding:20px 12px 56px}header{flex-direction:column;align-items:flex-start;gap:9px}.qg{grid-template-columns:1fr 1fr}.pbtn{display:none}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="w">
+
+  <header class="ain">
+    <div class="logo">
+      <div class="lico">FB</div>
+      <div class="lnm">FB<span>DL</span></div>
+    </div>
+    <div class="ver">v5.0 · WORKER</div>
+  </header>
+
+  <div class="hero ain">
+    <div class="pill">FACEBOOK VIDEO DOWNLOADER</div>
+    <h1>Download Any <span>FB Video</span><br/>Instantly</h1>
+    <p>Paste any public Facebook video URL. Real HD &amp; SD download links — extracted live via Cloudflare Worker.</p>
+  </div>
+
+  <div class="card ain" id="mc">
+    <div class="clbl">// PASTE VIDEO URL</div>
+    <div class="ig">
+      <div class="ipfx">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <input type="url" id="ui" placeholder="https://www.facebook.com/watch?v=..." autocomplete="off" spellcheck="false"/>
+      <button class="pbtn" onclick="doPaste()">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        PASTE
+      </button>
+    </div>
+
+    <button class="fbtn" id="fb" onclick="doFetch()">
+      <div class="spin" id="sp"></div>
+      <svg id="fic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="ft">FETCH VIDEO</span>
+    </button>
+
+    <div class="pw" id="pw">
+      <div class="ph"><span id="pl">INITIALIZING...</span><span id="pp">0%</span></div>
+      <div class="pb"><div class="pf" id="pf"></div></div>
+      <div class="steps">
+        <div class="step" id="s1">VALIDATING</div>
+        <div class="step" id="s2">CALLING WORKER</div>
+        <div class="step" id="s3">FETCHING FB PAGE</div>
+        <div class="step" id="s4">PARSING LINKS</div>
+        <div class="step" id="s5">DONE</div>
+      </div>
+    </div>
+
+    <div class="err" id="er">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="em"></span>
+    </div>
+  </div>
+
+  <div class="res" id="res">
+    <div class="card">
+      <div class="clbl">// VIDEO FOUND</div>
+      <div class="vp">
+        <div class="vt" id="vt">
+          <div class="ni" id="ni">
+            <div class="niico">f</div>
+            <div class="nit" id="nit">LOADING...</div>
+          </div>
+          <img id="ti" style="display:none" alt="thumbnail" crossorigin="anonymous"/>
+          <div class="ply"><div class="plc"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--glow);margin-left:3px"><polygon points="5,3 19,12 5,21"/></svg></div></div>
+        </div>
+        <div class="vm">
+          <div class="vtl" id="vtl">—</div>
+          <div class="vst">
+            <div class="vsi"><div class="vd"></div><span id="vdu">—</span></div>
+            <div class="vsi"><div class="vd" style="background:var(--ok)"></div><span id="vfc">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="clbl">// DOWNLOAD FORMATS</div>
+      <div class="qg" id="qg"></div>
+      <div class="ar" id="aro" style="display:none">
+        <div class="ai">
+          <div class="aic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+          <div><div class="al">Audio Only</div><div class="as">OPEN VIDEO → SAVE AUDIO TRACK</div></div>
+        </div>
+        <a class="ab" id="abl" href="#" target="_blank" rel="noopener">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/><path d="M5 20h14"/></svg>
+          OPEN AUDIO
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="feats ain">
+    <div class="ft"><div class="ftic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div><div><div class="ftt">Server-Side</div><div class="ftd">Worker fetches Facebook directly. No CORS issues.</div></div></div>
+    <div class="ft"><div class="ftic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><div><div class="ftt">HD + SD Links</div><div class="ftd">Every quality stream available for the video.</div></div></div>
+    <div class="ft"><div class="ftic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div class="ftt">No Login</div><div class="ftd">Works on any public Facebook video URL.</div></div></div>
+    <div class="ft"><div class="ftic"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20"/></svg></div><div><div class="ftt">Edge Network</div><div class="ftd">Cloudflare's global edge — fast everywhere.</div></div></div>
+  </div>
+
+  <footer>
+    <p><strong>FBDL</strong> — For personal, lawful use only.<br/>Respect copyright and Facebook's Terms of Service.</p>
+  </footer>
+</div>
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// !! IMPORTANT !!
+// Replace the URL below with YOUR Worker URL after deploying.
+// It will look like: https://fbdl-worker.YOUR-NAME.workers.dev
+// ============================================================
+const WORKER_URL = "https://fbdl-worker.YOUR-SUBDOMAIN.workers.dev";
+
+const g = id => document.getElementById(id);
+let busy = false;
+
+function showErr(m){g("er").className="err on";g("em").textContent=m}
+function hideErr(){g("er").className="err"}
+function toast(m){const t=g("toast");t.textContent=m;t.style.opacity="1";t.style.transform="translateX(-50%) translateY(0)";clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity="0";t.style.transform="translateX(-50%) translateY(10px)"},3000)}
+function isFBUrl(u){try{const p=new URL(u.trim());return/facebook\.com|fb\.watch|fb\.com/i.test(p.hostname)}catch{return false}}
+
+const STEPS=[{id:"s1",l:"VALIDATING URL",p:14},{id:"s2",l:"CALLING WORKER",p:35},{id:"s3",l:"FETCHING FB PAGE",p:65},{id:"s4",l:"PARSING LINKS",p:85},{id:"s5",l:"COMPLETE",p:100}];
+function setProg(p,l){g("pf").style.width=p+"%";g("pp").textContent=p+"%";g("pl").textContent=l}
+function markStep(id,s){g(id).className="step"+(s?" "+s:"")}
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+async function runSteps(from,to){for(let i=from;i<to;i++){const s=STEPS[i];markStep(s.id,"active");setProg(s.p,s.l);await delay(280+Math.random()*220);markStep(s.id,"done")}}
+
+async function doPaste(){try{const t=await navigator.clipboard.readText();if(t){g("ui").value=t.trim();g("ui").focus()}}catch{g("ui").focus()}}
+
+function mkCard(label,desc,href,best){
+  const d=document.createElement("div");
+  d.className="qc"+(best?" best":"");
+  d.innerHTML='<div class="ql">'+label+'</div><div class="qd">MP4 · '+desc+'</div><div class="qb"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/><path d="M5 20h14"/></svg>DOWNLOAD</div>';
+  d.addEventListener("click",()=>{
+    // Open in new tab — browser will either download or play it
+    window.open(href,"_blank","noopener,noreferrer");
+    toast("↓ Opening "+label+" — right-click → Save Video As");
+  });
+  return d;
+}
+
+function render(data){
+  const thumb=data.thumbnail||null;
+  if(thumb){
+    g("ni").style.display="none";
+    const im=g("ti");im.src=thumb;im.style.display="block";
+    im.onerror=()=>{im.style.display="none";g("ni").style.display="flex";g("nit").textContent="NO THUMBNAIL"};
+  } else {
+    g("ni").style.display="flex";g("nit").textContent="NO THUMBNAIL";
+  }
+  g("vtl").textContent=data.title||"Facebook Video";
+  g("vdu").textContent=data.duration||"Unknown duration";
+
+  const grid=g("qg");grid.innerHTML="";
+  let n=0;
+  if(data.hd){grid.appendChild(mkCard("HD","HIGH DEFINITION",data.hd,true));n++}
+  if(data.sd){grid.appendChild(mkCard("SD","STANDARD DEFINITION",data.sd,!data.hd));n++}
+
+  if(n===0){
+    grid.innerHTML='<div style="color:var(--dim);font-family:Share Tech Mono,monospace;font-size:10px;padding:10px 0;letter-spacing:1px;grid-column:1/-1">NO DIRECT LINKS FOUND — Video may be private or require login.</div>';
+  }
+  g("vfc").textContent=n+" FORMAT"+(n!==1?"S":"")+" FOUND";
+  if(data.sd||data.hd){g("aro").style.display="flex";g("abl").href=data.sd||data.hd}
+  else{g("aro").style.display="none"}
+
+  g("res").className="res on";
+  setTimeout(()=>g("res").scrollIntoView({behavior:"smooth",block:"nearest"}),100);
+}
+
+async function doFetch(){
+  if(busy)return;
+  const url=g("ui").value.trim();
+  hideErr();
+  g("res").className="res";
+
+  if(!url){showErr("Please enter a Facebook video URL.");return}
+  if(!isFBUrl(url)){showErr("Invalid URL — must be facebook.com, fb.watch, or fb.com.");return}
+
+  // Check Worker URL has been configured
+  if(WORKER_URL.includes("YOUR-SUBDOMAIN")){
+    showErr("Worker not configured yet. Open index.html and replace WORKER_URL with your deployed Worker URL.");
+    return;
+  }
+
+  busy=true;
+  g("fb").disabled=true;
+  g("sp").className="spin on";
+  g("fic").style.display="none";
+  g("ft").textContent="FETCHING...";
+  g("pw").className="pw on";
+
+  const uiSteps=runSteps(0,2);
+  let data=null,errMsg=null;
+
+  try{
+    const apiUrl=WORKER_URL+"/extract?url="+encodeURIComponent(url);
+    const res=await fetch(apiUrl,{signal:AbortSignal.timeout(20000)});
+    const json=await res.json();
+    if(json.error)errMsg=json.error;
+    else data=json;
+  }catch(e){
+    errMsg="Could not reach Worker. Check your WORKER_URL or try again. ("+e.message+")";
+  }
+
+  await uiSteps;
+  await runSteps(2,5);
+  await delay(180);
+
+  g("fb").disabled=false;
+  g("sp").className="spin";
+  g("fic").style.display="";
+  g("ft").textContent="FETCH VIDEO";
+  busy=false;
+
+  if(errMsg){showErr(errMsg);return}
+  if(!data){showErr("No data returned from Worker.");return}
+  render(data);
+}
+
+g("ui").addEventListener("keydown",e=>{if(e.key==="Enter")doFetch()});
+g("ui").addEventListener("focus",function(){this.select()});
+</script>
+</body>
+</html>
